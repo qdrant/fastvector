@@ -75,11 +75,9 @@ def test_embedding():
     is_ci = os.getenv("CI")
 
     for model_desc in TextEmbedding.list_supported_models():
-        if (
-            not is_ci
-            and model_desc["size_in_GB"] > 1
-            and model_desc["model"] not in MULTI_TASK_MODELS
-        ):
+        if (not is_ci and model_desc["size_in_GB"] > 1) or model_desc[
+            "model"
+        ] in MULTI_TASK_MODELS:
             continue
 
         dim = model_desc["dim"]
