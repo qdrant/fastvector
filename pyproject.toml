@@ -12,7 +12,6 @@ keywords = ["vector", "embedding", "neural", "search", "qdrant", "sentence-trans
 
 [tool.poetry.dependencies]
 python = ">=3.9.0"
-protobuf = "<=29.2"
 onnx = ">=1.15.0"
 numpy = [
     { version = ">=1.21,<2.1.0", python = "<3.10" },
