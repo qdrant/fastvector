@@ -1,12 +1,13 @@
 import os
 import time
+import json
 import shutil
 import tarfile
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import requests
-from huggingface_hub import snapshot_download
+from huggingface_hub import snapshot_download, hf_hub_url, get_hf_file_metadata
 from huggingface_hub.utils import (
     RepositoryNotFoundError,
     disable_progress_bars,
@@ -17,6 +18,8 @@ from tqdm import tqdm
 
 
 class ModelManagement:
+    METADATA_FILE = "files_metadata.json"
+
     @classmethod
     def list_supported_models(cls) -> list[dict[str, Any]]:
         """Lists the supported models.
@@ -98,7 +101,7 @@ class ModelManagement:
         cls,
         hf_source_repo: str,
         cache_dir: str,
-        extra_patterns: Optional[list[str]] = None,
+        extra_patterns: list[str],
         local_files_only: bool = False,
         **kwargs,
     ) -> str:
@@ -107,12 +110,52 @@ class ModelManagement:
         Args:
             hf_source_repo (str): Name of the model on HuggingFace Hub, e.g. "qdrant/all-MiniLM-L6-v2-onnx".
             cache_dir (Optional[str]): The path to the cache directory.
-            extra_patterns (Optional[list[str]]): extra patterns to allow in the snapshot download, typically
+            extra_patterns (list[str]): extra patterns to allow in the snapshot download, typically
                 includes the required model files.
             local_files_only (bool, optional): Whether to only use local files. Defaults to False.
         Returns:
             Path: The path to the model directory.
         """
+        verified_metadata = False
+
+        def _verify_files_from_metadata(
+            model_dir: Path, stored_metadata: dict[str, Any], hf_source_repo: str
+        ) -> bool:
+            for rel_path, meta in stored_metadata.items():
+                file_path = model_dir / rel_path
+                file_name = file_path.name
+
+                try:  # if there's network, check with hf
+                    url = hf_hub_url(hf_source_repo, file_name)
+                    hf_metadata = get_hf_file_metadata(url)
+                    if (
+                        not file_path.exists()
+                        or hf_metadata.size != meta["size"]
+                        or hf_metadata.commit_hash != meta["commit_hash"]
+                    ):
+                        return False
+                except Exception:  # if not, only check local size
+                    if not file_path.exists() or file_path.stat().st_size != meta["size"]:
+                        return False
+            return True
+
+        def _save_file_metadata(model_dir: Path, hf_source_repo: str) -> None:
+            metadata = {}
+            for file_path in model_dir.rglob("*"):
+                if file_path.is_file() and file_path.name != cls.METADATA_FILE:
+                    try:  # there's network at least first time
+                        url = hf_hub_url(hf_source_repo, file_path.name)
+                        hf_metadata = get_hf_file_metadata(url)
+                        metadata[str(file_path.relative_to(model_dir))] = {
+                            "size": hf_metadata.size,
+                            "commit_hash": hf_metadata.commit_hash,
+                        }
+                    except Exception:
+                        continue
+
+            if metadata:
+                (model_dir / cls.METADATA_FILE).write_text(json.dumps(metadata))
+
         allow_patterns = [
             "config.json",
             "tokenizer.json",
@@ -120,22 +163,35 @@ class ModelManagement:
             "special_tokens_map.json",
             "preprocessor_config.json",
         ]
-        if extra_patterns is not None:
-            allow_patterns.extend(extra_patterns)
+
+        model_file = next((file for file in extra_patterns if file.endswith((".onnx"))), "")
+        allow_patterns.extend(extra_patterns)
 
         snapshot_dir = Path(cache_dir) / f"models--{hf_source_repo.replace('/', '--')}"
-        is_cached = snapshot_dir.exists()
+        metadata_file = snapshot_dir / cls.METADATA_FILE
 
-        if is_cached:
-            disable_progress_bars()
+        if snapshot_dir.exists() and metadata_file.exists():
+            stored_metadata = json.loads(metadata_file.read_text())
+            verified_metadata = _verify_files_from_metadata(
+                snapshot_dir, stored_metadata, hf_source_repo
+            )
+            if verified_metadata or local_files_only:
+                disable_progress_bars()
 
-        return snapshot_download(
+        result = snapshot_download(
             repo_id=hf_source_repo,
             allow_patterns=allow_patterns,
             cache_dir=cache_dir,
             local_files_only=local_files_only,
             **kwargs,
         )
+
+        if not os.path.exists(os.path.join(result, model_file)):
+            raise FileNotFoundError("Couldn't download model from huggingface")
+
+        if not verified_metadata:
+            _save_file_metadata(snapshot_dir, hf_source_repo)
+        return result
 
     @classmethod
     def decompress_to_cache(cls, targz_path: str, cache_dir: str):
