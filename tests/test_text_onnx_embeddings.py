@@ -68,12 +68,16 @@ CANONICAL_VECTOR_VALUES = {
     "jinaai/jina-clip-v1": np.array([-0.0862, -0.0101, -0.0056, 0.0375, -0.0472]),
 }
 
+MULTI_TASK_MODELS = ["jinaai/jina-embeddings-v3"]
+
 
 def test_embedding():
     is_ci = os.getenv("CI")
 
     for model_desc in TextEmbedding.list_supported_models():
-        if not is_ci and model_desc["size_in_GB"] > 1:
+        if (not is_ci and model_desc["size_in_GB"] > 1) or model_desc[
+            "model"
+        ] in MULTI_TASK_MODELS:
             continue
 
         dim = model_desc["dim"]
