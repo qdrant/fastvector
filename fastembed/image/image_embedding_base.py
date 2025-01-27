@@ -13,7 +13,7 @@ class ImageEmbeddingBase(ModelManagement):
         cache_dir: Optional[str] = None,
         threads: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> None:
         self.model_name = model_name
         self.cache_dir = cache_dir
         self.threads = threads

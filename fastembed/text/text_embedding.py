@@ -63,7 +63,7 @@ class TextEmbedding(TextEmbeddingBase):
         device_ids: Optional[list[int]] = None,
         lazy_load: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(model_name, cache_dir, threads, **kwargs)
         if model_name == "nomic-ai/nomic-embed-text-v1.5-Q":
             warnings.warn(

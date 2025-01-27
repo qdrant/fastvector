@@ -53,7 +53,7 @@ class SparseTextEmbedding(SparseTextEmbeddingBase):
         device_ids: Optional[list[int]] = None,
         lazy_load: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(model_name, cache_dir, threads, **kwargs)
         if model_name == "prithvida/Splade_PP_en_v1":
             warnings.warn(

@@ -53,7 +53,7 @@ class LateInteractionTextEmbedding(LateInteractionTextEmbeddingBase):
         device_ids: Optional[list[int]] = None,
         lazy_load: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(model_name, cache_dir, threads, **kwargs)
         for EMBEDDING_MODEL_TYPE in self.EMBEDDINGS_REGISTRY:
             supported_models = EMBEDDING_MODEL_TYPE.list_supported_models()

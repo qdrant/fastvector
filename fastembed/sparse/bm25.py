@@ -109,7 +109,7 @@ class Bm25(SparseTextEmbeddingBase):
         token_max_length: int = 40,
         disable_stemmer: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(model_name, cache_dir, **kwargs)
 
         if language not in supported_languages:
@@ -330,7 +330,7 @@ class Bm25Worker(Worker):
         model_name: str,
         cache_dir: str,
         **kwargs,
-    ):
+    ) -> None:
         self.model = self.init_embedding(model_name, cache_dir, **kwargs)
 
     @classmethod
