@@ -121,7 +121,7 @@ class EmbeddingWorker(Worker):
         model_name: str,
         cache_dir: str,
         **kwargs,
-    ):
+    ) -> None:
         self.model = self.init_embedding(model_name, cache_dir, **kwargs)
 
     @classmethod

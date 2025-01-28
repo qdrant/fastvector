@@ -12,7 +12,7 @@ class LateInteractionTextEmbeddingBase(ModelManagement):
         cache_dir: Optional[str] = None,
         threads: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> None:
         self.model_name = model_name
         self.cache_dir = cache_dir
         self.threads = threads
@@ -42,9 +42,7 @@ class LateInteractionTextEmbeddingBase(ModelManagement):
         # This is model-specific, so that different models can have specialized implementations
         yield from self.embed(texts, **kwargs)
 
-    def query_embed(
-        self, query: Union[str, Iterable[str]], **kwargs
-    ) -> Iterable[np.ndarray]:
+    def query_embed(self, query: Union[str, Iterable[str]], **kwargs) -> Iterable[np.ndarray]:
         """
         Embeds queries
 

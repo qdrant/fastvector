@@ -96,7 +96,7 @@ class OnnxTextCrossEncoder(TextCrossEncoderBase, OnnxCrossEncoderModel):
         lazy_load: bool = False,
         device_id: Optional[int] = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """
         Args:
             model_name (str): The name of the model to use.
