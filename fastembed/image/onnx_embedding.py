@@ -78,7 +78,7 @@ class OnnxImageEmbedding(ImageEmbeddingBase, OnnxImageModel[np.ndarray]):
         device_ids: Optional[list[int]] = None,
         lazy_load: bool = False,
         device_id: Optional[int] = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Args:
@@ -154,7 +154,7 @@ class OnnxImageEmbedding(ImageEmbeddingBase, OnnxImageModel[np.ndarray]):
         images: ImageInput,
         batch_size: int = 16,
         parallel: Optional[int] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Iterable[np.ndarray]:
         """
         Encode a list of images into list of embeddings.
@@ -189,7 +189,7 @@ class OnnxImageEmbedding(ImageEmbeddingBase, OnnxImageModel[np.ndarray]):
         return OnnxImageEmbeddingWorker
 
     def _preprocess_onnx_input(
-        self, onnx_input: dict[str, np.ndarray], **kwargs
+        self, onnx_input: dict[str, np.ndarray], **kwargs: Any
     ) -> dict[str, np.ndarray]:
         """
         Preprocess the onnx input.
@@ -202,7 +202,7 @@ class OnnxImageEmbedding(ImageEmbeddingBase, OnnxImageModel[np.ndarray]):
 
 
 class OnnxImageEmbeddingWorker(ImageEmbeddingWorker):
-    def init_embedding(self, model_name: str, cache_dir: str, **kwargs) -> OnnxImageEmbedding:
+    def init_embedding(self, model_name: str, cache_dir: str, **kwargs: Any) -> OnnxImageEmbedding:
         return OnnxImageEmbedding(
             model_name=model_name,
             cache_dir=cache_dir,
